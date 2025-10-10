@@ -1,0 +1,353 @@
+/* ---------------------------- RESET E PADRÕES ---------------------------- */
+* {
+    margin: 0;
+    /* remove margens padrão de todos os elementos */
+    padding: 0;
+    /* remove padding padrão */
+    box-sizing: border-box;
+    /* inclui padding e border na largura/altura */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* fonte padrão */
+}
+
+html {
+    scroll-behavior: smooth;
+    /* rolagem suave para links internos */
+}
+
+/* ---------------------------- VARIÁVEIS GLOBAIS ---------------------------- */
+:root {
+    --primaria: #4f46e5;
+    /* cor primária */
+    --secundaria: #7c3aed;
+    /* cor secundária */
+    --escuro: #0f172a;
+    /* fundo escuro */
+    --maisEscuro: #0a0f1c;
+    /* fundo mais escuro */
+    --claro: #e2e8f0;
+    /* cor clara (texto) */
+    --vidro: rgba(255, 255, 255, 0.1);
+    /* efeito vidro/transparência */
+}
+
+/* ---------------------------- BODY ---------------------------- */
+body {
+    background-color: var(--escuro);
+    /* fundo principal */
+    color: var(--claro);
+    /* cor do texto */
+    min-height: 200vh;
+    /* altura mínima da página (para rolagem longa) */
+}
+
+/* ---------------------------- NAVEGAÇÃO ---------------------------- */
+.navegacao {
+    position: fixed;
+    /* fixa no topo da página */
+    top: 0;
+    background: rgba(15, 23, 42, 0.8);
+    /* fundo semitransparente */
+    width: 100%;
+    /* ocupa toda a largura */
+    z-index: 100;
+    /* fica acima de outros elementos */
+    padding: 1.5rem;
+    /* espaçamento interno */
+}
+
+.menu {
+    display: flex;
+    /* itens em linha */
+    justify-content: center;
+    /* centraliza horizontalmente */
+    list-style: none;
+    /* remove marcadores da lista */
+    gap: 3rem;
+    /* espaço entre os itens */
+}
+
+.menu-link {
+    text-decoration: none;
+    /* remove sublinhado */
+    color: var(--claro);
+    /* cor do link */
+    font-weight: 500;
+    /* peso da fonte */
+    position: relative;
+    /* necessário para o ::after */
+    padding: 0.5rem;
+    /* espaçamento interno do link */
+}
+
+.menu-link::after {
+    content: '';
+    /* cria uma linha abaixo do link */
+    height: 2px;
+    width: 0%;
+    /* inicialmente invisível */
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, var(--primaria), var(--secundaria));
+    /* gradiente */
+    transition: width 0.5s ease;
+    /* animação de expansão */
+}
+
+.menu-link:hover::after {
+    width: 100%;
+    /* linha cresce ao passar o mouse */
+}
+
+/* ---------------------------- CABEÇALHO ---------------------------- */
+.cabecalho {
+    min-height: 100vh;
+    /* ocupa toda a tela */
+    display: flex;
+    justify-content: center;
+    /* centraliza horizontal */
+    align-items: center;
+    /* centraliza vertical */
+    flex-direction: column;
+    /* itens em coluna */
+    padding-top: 8rem;
+    /* espaço para a navegação */
+}
+
+.foto-perfil {
+    width: 350px;
+    height: 350px;
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+    /* sombra azul suave */
+    border-radius: 50%;
+    /* formato circular */
+    border: 4px solid var(--vidro);
+    /* borda efeito vidro */
+    animation: flutuar 5s ease-in-out infinite;
+    /* animação de flutuação */
+}
+
+h1 {
+    font-size: 3.5rem;
+    color: var(--primaria);
+    /* cor primária */
+    font-weight: bold;
+    margin: 10px;
+}
+
+.cabecalho-sub-titulo {
+    font-size: 1.8rem;
+    color: var(--claro);
+}
+
+/* ---------------------------- SOBRE ---------------------------- */
+.sobre {
+    padding: 10rem 2rem;
+    /* espaçamento interno da seção */
+}
+
+.sobre-titulo {
+    font-size: 3rem;
+    color: var(--claro);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sobre-caixa {
+    padding: 2rem;
+    max-width: 800px;
+    /* largura máxima */
+    margin: 0 auto;
+    /* centraliza horizontal */
+    border-radius: 16px;
+    /* cantos arredondados */
+    border: 1px solid rgba(254, 254, 254, 0.1);
+    /* borda leve */
+    background: rgba(255, 255, 255, 0.1);
+    /* fundo transparente */
+    backdrop-filter: blur(10px);
+    /* efeito vidro */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    /* sombra suave */
+    color: #fff;
+    /* cor do texto */
+}
+
+.sobre-paragrafo {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+/* ---------------------------- PROJETOS ---------------------------- */
+.projetos {
+    padding: 10rem 2rem;
+    /* espaçamento da seção */
+}
+
+.projetos-caixa {
+    display: grid;
+    /* grid responsivo */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    /* colunas adaptáveis */
+    gap: 2rem;
+    /* espaço entre cards */
+    max-width: 1200px;
+    margin: 0 auto;
+    /* centraliza */
+}
+
+.projetos-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--vidro);
+    overflow: hidden;
+    cursor: pointer;
+    /* muda cursor ao passar */
+    transition: transform 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
+    /* animações */
+}
+
+.projetos-card:hover {
+    transform: scale(1.03);
+    /* aumenta levemente */
+    box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.projetos-titulo {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+}
+
+.projetos-imagem {
+    height: 200px;
+    width: 100%;
+    object-fit: cover;
+    /* mantém proporção da imagem */
+}
+
+.caixa-textos-projetos {
+    padding: 1.5rem;
+}
+
+.paragrafo-projetos {
+    color: rgba(226, 232, 240, 0.8);
+    /* tom mais claro */
+    line-height: 1.25rem;
+}
+
+.info-projetos {
+    margin-bottom: 5px;
+}
+
+/* ---------------------------- CONTATOS ---------------------------- */
+.contatos {
+    padding: 12rem 2rem;
+    /* espaçamento interno */
+    margin-bottom: 8rem;
+    /* espaço extra no fim */
+}
+
+.contatos-titulo {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 50px;
+}
+
+.formulario-contato {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    backdrop-filter: blur(5px);
+    padding: 2rem;
+    border: 1px solid var(--vidro);
+}
+
+.campo-form {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: var(--claro);
+    border: 1px solid var(--vidro);
+    outline: none;
+    /* remove contorno padrão */
+}
+
+.campo-form:focus {
+    border-color: var(--secundaria);
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+}
+
+.grupo-form {
+    margin-bottom: 1.5rem;
+    /* espaço entre campos */
+}
+
+.botao-form {
+    color: var(--claro);
+    background: linear-gradient(45deg, var(--primaria), var(--secundaria));
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    transition: all 0.3s ease;
+    /* animação hover */
+}
+
+.botao-form:hover {
+    transform: translateY(-3px);
+    /* efeito de elevação */
+    box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+}
+
+/* ---------------------------- PARTICULAS DE FUNDO ---------------------------- */
+.particulas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    /* atrás do conteúdo */
+    opacity: 0.5;
+    background:
+        radial-gradient(circle at 10% 20%, var(--primaria) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, var(--secundaria) 0%, transparent 20%),
+        var(--maisEscuro);
+}
+
+/* ---------------------------- ANIMAÇÃO ---------------------------- */
+@keyframes flutuar {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        /* posição inicial e final */
+    }
+
+    50% {
+        transform: translateY(-20px);
+        /* sobe no meio da animação */
+    }
+}
+
+/* ---------------------------- RODAPÉ ---------------------------- */
+footer {
+    height: 300px;
+    /* cria espaço no fim da página */
+}
+
+/* ---------------------------- ESPAÇO EXTRA NO BODY ---------------------------- */
+body::after {
+    content: "";
+    display: block;
+    height: 400px;
+    /* altura extra para rolagem */
+}

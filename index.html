@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<!-- Define o idioma da página como português do Brasil -->
+
+<head>
+    <meta charset="UTF-8"> <!-- Define a codificação de caracteres -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Permite que o site seja responsivo em dispositivos móveis -->
+
+    <link rel="stylesheet" href="styles.css"> <!-- Link para o CSS externo -->
+
+    <title>Maurício Leonel | Portfólio</title> <!-- Título da aba do navegador -->
+</head>
+
+<!-- ---------------------------- SCRIPTS DE ROLAGEM SUAVE ---------------------------- -->
+<script src="https://unpkg.com/@studio-freight/lenis"></script>
+<script>
+    // Inicializa a biblioteca Lenis para rolagem suave
+    const lenis = new Lenis({
+        duration: 1.5, // duração da rolagem
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) // curva de suavização
+    })
+
+    function raf(time) {
+        lenis.raf(time) // atualiza o Lenis a cada frame
+        requestAnimationFrame(raf) // continua a animação
+    }
+
+    requestAnimationFrame(raf) // inicia a animação
+</script>
+
+<body>
+    <!-- ---------------------------- PARTICULAS DE FUNDO ---------------------------- -->
+    <div class="particulas"></div>
+
+    <!-- ---------------------------- NAVEGAÇÃO ---------------------------- -->
+    <nav class="navegacao">
+        <ul class="menu">
+            <li><a href="#inicio" class="menu-link">Início</a></li>
+            <li><a href="#sobre" class="menu-link">Sobre</a></li>
+            <li><a href="#projetos" class="menu-link">Projetos</a></li>
+            <li><a href="#contato" class="menu-link">Contato</a></li>
+        </ul>
+    </nav>
+
+    <!-- ---------------------------- CABEÇALHO ---------------------------- -->
+    <main id="inicio" class="cabecalho">
+        <img src="./img/fotoperfil.png" alt="Foto de Mauricio Leonel" class="foto-perfil">
+        <!-- Foto do perfil -->
+        <h1>Mauricio Leonel</h1> <!-- Nome principal -->
+        <p class="cabecalho-sub-titulo">Desenvolvedor Full Stack</p> <!-- Subtítulo -->
+    </main>
+
+    <!-- ---------------------------- SOBRE ---------------------------- -->
+    <section id="sobre" class="sobre">
+        <h2 class="sobre-titulo">Sobre Mim</h2>
+        <div class="sobre-caixa">
+            <p class="sobre-paragrafo">
+                Olá! Meu nome é Mauricio Leonel e sou um Desenvolvedor Full Stack apaixonado por tecnologia e inovação.
+                Tenho experiência na criação de sites modernos, sistemas web e soluções digitais que unem desempenho e
+                design.
+                Gosto de transformar ideias em projetos reais e funcionais, sempre buscando escrever códigos limpos,
+                eficientes e de fácil manutenção.
+                Atualmente, estou me aprimorando em JavaScript, PHP e React, explorando também ferramentas e frameworks
+                que tornam o desenvolvimento mais ágil.
+                Fora do código, sou curioso por natureza — gosto de aprender, testar novas tecnologias e descobrir
+                maneiras criativas de resolver problemas.
+            </p>
+        </div>
+    </section>
+
+    <!-- ---------------------------- PROJETOS ---------------------------- -->
+    <section id="projetos" class="projetos">
+        <h2 class="projetos-titulo">Meus Projetos</h2>
+
+        <div class="projetos-caixa">
+            <!-- Card do projeto 1 -->
+            <div class="projetos-card">
+                <img src="./img/projeto1.png" alt="Projeto 1" class="projetos-imagem">
+                <div class="caixa-textos-projetos">
+                    <h3 class="info-projetos">AeroPlane</h3>
+                    <p class="paragrafo-projetos">Site sobre aeronaves</p>
+                </div>
+            </div>
+
+            <!-- Card do projeto 2 -->
+            <div class="projetos-card">
+                <img src="./img/projeto2.png" alt="Projeto 2" class="projetos-imagem">
+                <div class="caixa-textos-projetos">
+                    <h3 class="info-projetos">Goblin Planet</h3>
+                    <p class="paragrafo-projetos">Site sobre goblins</p>
+                </div>
+            </div>
+
+            <!-- Card do projeto 3 -->
+            <div class="projetos-card">
+                <img src="./img/projeto3.png" alt="Projeto 3" class="projetos-imagem">
+                <div class="caixa-textos-projetos">
+                    <h3 class="info-projetos">Platinum Surf</h3>
+                    <p class="paragrafo-projetos">Site sobre Surfista Prateado</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ---------------------------- CONTATO ---------------------------- -->
+    <section id="contato" class="contato">
+        <h2 class="contatos-titulo">Entre em Contato</h2>
+
+        <!-- Formulário de contato -->
+        <form class="formulario-contato" id="formulario" onsubmit="enviarWhats(event)">
+            <div class="grupo-form">
+                <input placeholder="Nome" class="campo-form" id="nome">
+            </div>
+
+            <div class="grupo-form">
+                <textarea class="campo-form" placeholder="Digite sua Mensagem" rows="6" id="mensagem"></textarea>
+            </div>
+
+            <!-- Botão de envio do WhatsApp -->
+            <button type="button" class="botao-form" onclick="enviarWhats(event)">Enviar Whatsapp</button>
+        </form>
+    </section>
+
+    <!-- ---------------------------- FUNÇÃO JAVASCRIPT ---------------------------- -->
+    <script>
+        function enviarWhats(event) {
+            event.preventDefault(); // previne envio padrão do formulário
+
+            const nome = document.getElementById('nome').value; // pega o valor do nome
+            const mensagem = document.getElementById('mensagem').value; // pega o valor da mensagem
+            const telefone = '5561981093983'; // número do WhatsApp
+
+            // Monta a mensagem com o nome e o texto
+            const texto = `Olá! Me chamo ${nome}, ${mensagem}`;
+            const msgFormatada = encodeURIComponent(texto); // codifica a mensagem para URL
+
+            const url = `https://wa.me/${telefone}/?text=${msgFormatada}`; // URL para WhatsApp
+
+            window.open(url, '_blank'); // abre WhatsApp em nova aba
+            console.log(url); // log no console para debug
+        }
+    </script>
+
+
+
+</body>
+
+</html>
