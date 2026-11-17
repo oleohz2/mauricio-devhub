@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  /* Overrides so the site's own CSS works as a fixed 1080x1920 video frame */
+  * { font-family: 'Segoe UI', 'Inter', sans-serif; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body { min-height: 0; background: var(--maisEscuro); }
+  body::after { display: none; }
+  .foto-perfil { animation: none; }
+  .particulas { z-index: 0; opacity: .55; transition: none; }
+  .scene { position: absolute; inset: 0; display: none; z-index: 1; }
+  .center { position: absolute; left: 0; right: 0; text-align: center; }
+
+  /* S1 hook */
+  .hook-w { display: inline-block; font-weight: 800; font-size: 170px; color: #fff; letter-spacing: -4px; margin: 0 18px; }
+  .grad { background: linear-gradient(90deg, #818cf8, var(--secundaria) 55%, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hook-b { font-weight: 800; font-size: 128px; letter-spacing: -3px; line-height: 1.05; }
+
+  /* S2 hero (real site classes, scaled for the frame) */
+  .navegacao { position: absolute; padding: 2.2rem; }
+  .menu { gap: 2.6rem; }
+  .menu-link { font-size: 34px; }
+  .menu-link::after { transition: none; }
+  #s2 .cabecalho { position: absolute; inset: 0; min-height: 0; padding-top: 60px; }
+  #s2 .foto-perfil { width: 560px; height: 560px; object-fit: cover; border-width: 6px; }
+  #s2 h1 { font-size: 124px; margin: 56px 0 10px; letter-spacing: -2px; text-shadow: 0 0 40px rgba(79,70,229,.55); }
+  #s2 .cabecalho-sub-titulo { font-size: 62px; font-weight: 500; }
+
+  /* S3 services */
+  .sec-title { font-size: 96px; font-weight: 800; color: var(--claro); letter-spacing: -2px; }
+  .svc { position: absolute; left: 140px; width: 800px; height: 190px; display: flex; align-items: center; gap: 36px; padding: 0 44px; }
+  .svc .ico { width: 104px; height: 104px; border-radius: 26px; background: linear-gradient(45deg, var(--primaria), var(--secundaria)); display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 8px 30px rgba(124,58,237,.45); }
+  .svc .txt { font-size: 60px; white-space: nowrap; font-weight: 700; color: #fff; text-align: left; }
+  .chips { position: absolute; top: 1250px; left: 0; right: 0; display: flex; justify-content: center; gap: 26px; }
+  .chip { font-size: 46px; font-weight: 600; padding: 18px 38px; border-radius: 999px; background: rgba(255,255,255,.08); border: 2px solid rgba(124,58,237,.75); color: var(--claro); }
+
+  /* S4 projects (real cards) */
+  #s4 .projetos-card { position: absolute; left: 140px; width: 800px; height: 330px; display: flex; flex-direction: row; transition: none; }
+  #s4 .projetos-imagem { height: 330px; width: 290px; flex: none; }
+  #s4 .caixa-textos-projetos { padding: 0 40px; display: flex; flex-direction: column; justify-content: center; }
+  #s4 .info-projetos { font-size: 54px; white-space: nowrap; margin-bottom: 14px; color: #fff; }
+  #s4 .paragrafo-projetos { font-size: 38px; line-height: 1.25; }
+
+  /* S5 contact form (real form classes) */
+  #s5 .formulario-contato { position: absolute; left: 140px; top: 560px; width: 800px; max-width: none; padding: 52px; }
+  #s5 .campo-form { font-size: 42px; padding: 30px; border-radius: 14px; height: auto; resize: none; display: block; white-space: pre-wrap; min-height: 112px; }
+  #s5 .campo-form.area { min-height: 320px; }
+  #s5 .grupo-form { margin-bottom: 36px; }
+  #s5 .botao-form { font-size: 46px; padding: 34px; border-radius: 14px; transition: none; position: relative; overflow: hidden; }
+  .ph { color: rgba(226,232,240,.45); }
+  .caret { display: inline-block; width: 4px; height: 48px; background: var(--claro); vertical-align: -8px; margin-left: 2px; }
+  .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.45); pointer-events: none; }
+
+  /* S6 end card */
+  #s6 .foto-perfil { width: 300px; height: 300px; object-fit: cover; border-width: 5px; }
+  .end-q { font-size: 98px; font-weight: 800; color: #fff; letter-spacing: -2px; line-height: 1.08; }
+  .end-n { font-size: 76px; font-weight: 800; letter-spacing: -1px; }
+  .end-s { font-size: 44px; color: var(--claro); font-weight: 500; }
+  .cta { display: inline-flex; align-items: center; gap: 22px; font-size: 54px; font-weight: 800; color: #fff; padding: 36px 64px; border-radius: 999px; background: linear-gradient(45deg, var(--primaria), var(--secundaria)); box-shadow: 0 12px 50px rgba(124,58,237,.55); }
+
+  #cursor { position: absolute; z-index: 50; width: 64px; height: 64px; display: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+</style>
+</head>
+<body>
+<div class="particulas" id="bg"></div>
+
+<!-- S1: hook -->
+<div class="scene" id="s1">
+  <div class="center" id="s1a" style="top:520px">
+    <div><span class="hook-w" id="w1">Tem</span><span class="hook-w" id="w2">uma</span></div>
+    <div><span class="hook-w" id="w3">ideia?</span></div>
+  </div>
+  <div class="center hook-b" id="s1b" style="top:1010px"><span class="grad">Eu transformo<br>em site.</span></div>
+</div>
+
+<!-- S2: hero do site -->
+<div class="scene" id="s2">
+  <nav class="navegacao" id="nav">
+    <ul class="menu">
+      <li><a class="menu-link" id="ml0">Início</a></li>
+      <li><a class="menu-link">Sobre</a></li>
+      <li><a class="menu-link">Projetos</a></li>
+      <li><a class="menu-link">Contato</a></li>
+    </ul>
+  </nav>
+  <main class="cabecalho">
+    <img src="../../fotoperfil.png" class="foto-perfil" id="foto">
+    <h1 id="nome">Mauricio Leonel</h1>
+    <p class="cabecalho-sub-titulo" id="sub">Desenvolvedor Full Stack</p>
+  </main>
+</div>
+
+<!-- S3: o que eu faço -->
+<div class="scene" id="s3">
+  <div class="center sec-title" id="s3t" style="top:330px">O que eu faço</div>
+  <div class="svc sobre-caixa" id="c0" style="top:520px">
+    <div class="ico"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+    <div class="txt">Sites modernos</div>
+  </div>
+  <div class="svc sobre-caixa" id="c1" style="top:740px">
+    <div class="ico"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div>
+    <div class="txt">Sistemas web</div>
+  </div>
+  <div class="svc sobre-caixa" id="c2" style="top:960px">
+    <div class="ico"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6L19.5 10.5 13.9 12.4 12 18 10.1 12.4 4.5 10.5 10.1 8.6z"/><path d="M19 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></div>
+    <div class="txt">Soluções digitais</div>
+  </div>
+  <div class="chips"><span class="chip" id="k0">JavaScript</span><span class="chip" id="k1">PHP</span><span class="chip" id="k2">React</span></div>
+</div>
+
+<!-- S4: meus projetos -->
+<div class="scene" id="s4">
+  <div class="center sec-title projetos-titulo" id="s4t" style="top:280px">Meus Projetos</div>
+  <div class="projetos-card" id="p0" style="top:450px">
+    <img src="../../projeto1.png" class="projetos-imagem">
+    <div class="caixa-textos-projetos"><h3 class="info-projetos">AeroPlane</h3><p class="paragrafo-projetos">Site sobre aeronaves</p></div>
+  </div>
+  <div class="projetos-card" id="p1" style="top:810px">
+    <img src="../../projeto2.png" class="projetos-imagem" style="object-position:50% 45%">
+    <div class="caixa-textos-projetos"><h3 class="info-projetos">Goblin Planet</h3><p class="paragrafo-projetos">Site sobre goblins</p></div>
+  </div>
+  <div class="projetos-card" id="p2" style="top:1170px">
+    <img src="../../projeto3.png" class="projetos-imagem" style="object-position:50% 50%">
+    <div class="caixa-textos-projetos"><h3 class="info-projetos">Platinum Surf</h3><p class="paragrafo-projetos">Site sobre Surfista Prateado</p></div>
+  </div>
+</div>
+
+<!-- S5: contato -->
+<div class="scene" id="s5">
+  <div class="center sec-title contatos-titulo" id="s5t" style="top:380px">Entre em Contato</div>
+  <form class="formulario-contato" id="form">
+    <div class="grupo-form"><div class="campo-form" id="fNome"></div></div>
+    <div class="grupo-form"><div class="campo-form area" id="fMsg"></div></div>
+    <button type="button" class="botao-form" id="btn">Enviar Whatsapp<span class="ripple" id="rip"></span></button>
+  </form>
+</div>
+
+<!-- S6: end card -->
+<div class="scene" id="s6">
+  <div class="center" id="e0" style="top:330px"><img src="../../fotoperfil.png" class="foto-perfil" id="efoto"></div>
+  <div class="center end-q" id="e1" style="top:700px">Bora tirar sua<br>ideia do papel?</div>
+  <div class="center end-n grad" id="e2" style="top:960px">Mauricio Leonel</div>
+  <div class="center end-s" id="e3" style="top:1060px">Desenvolvedor Full Stack</div>
+  <div class="center" id="e4" style="top:1200px"><span class="cta">
+    <svg width="58" height="58" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
+    Chama no WhatsApp</span></div>
+</div>
+
+<svg id="cursor" viewBox="0 0 24 24"><path d="M4 2l15 11-6.5 1.2 3.8 7.3-2.9 1.5-3.8-7.4L4 20z" fill="#fff" stroke="#0a0f1c" stroke-width="1.3" stroke-linejoin="round"/></svg>
+
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, s, d) => cl((t - s) / d);
+const eOut = p => 1 - Math.pow(1 - p, 3);
+const eIn = p => p * p * p;
+const eIO = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const eBack = p => { const c = 1.6; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p;
+
+// scene windows (all cuts on the 120 BPM beat grid)
+const S = { s1: [0, 3.5], s2: [3.5, 7], s3: [7, 11.5], s4: [11.5, 15.5], s5: [15.5, 18.5], s6: [18.5, 22] };
+
+// enter (rise + fade in) and exit (rise + fade out) for one element
+function io(el, t, tin, tout, opts = {}) {
+  const dy = opts.dy ?? 60, din = opts.din ?? .45, dout = opts.dout ?? .3, sx = opts.sx ?? 0;
+  const a = eOut(prog(t, tin, din));
+  const b = tout == null ? 0 : eIn(prog(t, tout, dout));
+  const sc = opts.scale ? lerp(opts.scale, 1, eBack(prog(t, tin, din))) : 1;
+  el.style.opacity = a * (1 - b);
+  el.style.transform = `translate(${(1 - a) * sx}px, ${(1 - a) * dy - b * 50}px) scale(${sc})`;
+  el.style.filter = a < 1 ? `blur(${(1 - a) * 14}px)` : (b > 0 ? `blur(${b * 10}px)` : 'none');
+}
+
+function typed(str, t, start, cps) {
+  const n = Math.floor(cl((t - start) * cps, 0, str.length));
+  return str.slice(0, n);
+}
+
+function setCursor(x, y, show, press = 0) {
+  const c = $('cursor');
+  c.style.display = show ? 'block' : 'none';
+  c.style.left = x + 'px'; c.style.top = y + 'px';
+  c.style.transform = `scale(${1 - press * .18})`;
+}
+
+window.render = function (t) {
+  for (const k in S) $(k).style.display = (t >= S[k][0] && t < S[k][1]) ? 'block' : 'none';
+  // living background: the site's two radial glows drift slowly
+  const g1x = 10 + 12 * Math.sin(t * .35), g1y = 20 + 8 * Math.sin(t * .27 + 1);
+  const g2x = 90 - 12 * Math.sin(t * .31 + 2), g2y = 80 - 8 * Math.sin(t * .23);
+  $('bg').style.background = `radial-gradient(circle at ${g1x}% ${g1y}%, var(--primaria) 0%, transparent 32%), radial-gradient(circle at ${g2x}% ${g2y}%, var(--secundaria) 0%, transparent 32%), var(--maisEscuro)`;
+  setCursor(0, 0, false);
+
+  // ---- S1 hook
+  if (t < 3.5) {
+    ['w1', 'w2', 'w3'].forEach((id, i) => io($(id), t, i * .25, 3.15, { dy: 80, din: .35, scale: .7 }));
+    io($('s1b'), t, 1.5, 3.2, { dy: 90, din: .5 });
+    // first line dims once the answer lands
+    const dim = eOut(prog(t, 1.5, .5));
+    $('s1a').style.opacity = 1 - dim * .55;
+    $('s1a').style.transform = `translateY(${-dim * 40}px)`;
+  }
+  // ---- S2 hero
+  else if (t < 7) {
+    const l = t - 3.5;
+    io($('nav'), l, 0, null, { dy: -40, din: .5 });
+    const pf = eBack(prog(l, .1, .7));
+    const float = -15 + 15 * Math.cos((t - 3.6) * 2 * Math.PI / 5) ; // site's 5s flutuar loop
+    const ex = eIn(prog(l, 3.25, .25));
+    const f = $('foto');
+    f.style.opacity = eOut(prog(l, .1, .4)) * (1 - ex);
+    f.style.transform = `translateY(${float * 1.5 - ex * 60}px) scale(${lerp(.55, 1, pf)})`;
+    f.style.boxShadow = `0 0 ${20 + 70 * eOut(prog(l, .3, 1.2))}px rgba(79,70,229,${.3 + .35 * eOut(prog(l, .3, 1.2))})`;
+    io($('nome'), l, .5, 3.15, { dy: 70 });
+    io($('sub'), l, 1.0, 3.2, { dy: 50 });
+    // menu underline grows like the site's hover
+    $('nav').style.opacity = eOut(prog(l, 0, .5)) * (1 - ex);
+  }
+  // ---- S3 services
+  else if (t < 11.5) {
+    const l = t - 7;
+    io($('s3t'), l, 0, 4.2, { dy: 50 });
+    ['c0', 'c1', 'c2'].forEach((id, i) => io($(id), l, .5 + i * .5, 4.2, { dy: 0, sx: 260, din: .5 }));
+    ['k0', 'k1', 'k2'].forEach((id, i) => io($(id), l, 2.0 + i * .25, 4.2, { dy: 40, din: .35, scale: .6 }));
+  }
+  // ---- S4 projects
+  else if (t < 15.5) {
+    const l = t - 11.5;
+    io($('s4t'), l, 0, 3.7, { dy: 50 });
+    ['p0', 'p1', 'p2'].forEach((id, i) => {
+      const el = $(id);
+      io(el, l, .5 + i * .5, 3.7, { dy: 160, din: .55 });
+      // hover on Goblin Planet: the site's scale(1.03) + glow
+      if (i === 1) {
+        const h = eOut(prog(l, 2.5, .3)) * (1 - eOut(prog(l, 3.45, .25)));
+        const base = el.style.transform;
+        el.style.transform = base + ` scale(${1 + .04 * h})`;
+        el.style.boxShadow = `0 ${10 + 14 * h}px ${25 + 30 * h}px rgba(79,70,229,${.2 + .35 * h})`;
+        el.style.backgroundColor = `rgba(255,255,255,${.1 + .06 * h})`;
+      }
+    });
+    // cursor glides in to hover the middle card
+    if (l > 2.0 && l < 3.7) {
+      const m = eIO(prog(l, 2.0, .7));
+      setCursor(lerp(1010, 820, m), lerp(1560, 1060, m), true);
+    }
+  }
+  // ---- S5 contact form
+  else if (t < 18.5) {
+    const l = t - 15.5;
+    io($('s5t'), l, 0, 2.7, { dy: 50 });
+    io($('form'), l, .1, 2.7, { dy: 120, din: .5 });
+    const nome = typed('Ana', l, .5, 8);
+    const msg = typed('Quero um site novo!', l, 1.0, 16);
+    const caretOn = Math.floor(l * 4) % 2 === 0;
+    const nomeActive = l < 1.0, msgActive = l >= 1.0 && l < 2.25;
+    $('fNome').innerHTML = nome ? nome + (nomeActive ? '<span class="caret"></span>' : '') : '<span class="ph">Nome</span>' + (nomeActive && caretOn ? '<span class="caret"></span>' : '');
+    $('fMsg').innerHTML = msg ? msg + (msgActive ? '<span class="caret"></span>' : '') : '<span class="ph">Digite sua Mensagem</span>';
+    $('fNome').style.borderColor = nomeActive && l > .3 ? 'var(--secundaria)' : '';
+    $('fNome').style.boxShadow = nomeActive && l > .3 ? '0 0 16px rgba(79,70,229,.45)' : '';
+    $('fMsg').style.borderColor = msgActive ? 'var(--secundaria)' : '';
+    $('fMsg').style.boxShadow = msgActive ? '0 0 16px rgba(79,70,229,.45)' : '';
+    // cursor to the button, click at l=2.25 (t=17.75, on the beat)
+    const btn = $('btn');
+    if (l > 1.6 && l < 2.75) {
+      const m = eIO(prog(l, 1.6, .55));
+      const press = prog(l, 2.15, .1) * (1 - prog(l, 2.3, .15));
+      setCursor(lerp(980, 600, m), lerp(1500, 1190, m), true, press);
+    }
+    const hov = eOut(prog(l, 1.95, .2));
+    const press = prog(l, 2.15, .1) * (1 - prog(l, 2.3, .2));
+    btn.style.transform = `translateY(${-6 * hov + 6 * press}px) scale(${1 - .03 * press})`;
+    btn.style.boxShadow = `0 ${10 * hov}px ${30 * hov + 40 * prog(l, 2.25, .3)}px rgba(79,70,229,${.4 * hov + .4 * prog(l, 2.25, .3)})`;
+    const rp = prog(l, 2.25, .45);
+    const rip = $('rip');
+    rip.style.width = rip.style.height = (rp * 900) + 'px';
+    rip.style.left = (300 - rp * 450) + 'px'; rip.style.top = (60 - rp * 450) + 'px';
+    rip.style.opacity = rp > 0 ? .6 * (1 - rp) : 0;
+  }
+  // ---- S6 end card
+  else {
+    const l = t - 18.5;
+    io($('e0'), l, 0, null, { dy: 40, din: .5, scale: .6 });
+    io($('e1'), l, .2, null, { dy: 70, din: .5 });
+    io($('e2'), l, .7, null, { dy: 50 });
+    io($('e3'), l, .9, null, { dy: 40 });
+    io($('e4'), l, 1.25, null, { dy: 60, din: .5, scale: .7 });
+    $('efoto').style.transform = `translateY(${-8 + 8 * Math.cos(l * 2 * Math.PI / 5)}px)`;
+    $('efoto').style.boxShadow = '0 0 60px rgba(124,58,237,.55)';
+    // CTA pulses on every bar after it lands
+    if (l > 2.0) {
+      const ph = ((l - 2.0) % 1.0) / 1.0;
+      const pulse = Math.exp(-ph * 6);
+      $('e4').style.transform = `scale(${1 + .04 * pulse})`;
+    }
+  }
+};
+
+window.ready = (async () => {
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = r; i.onerror = r; })));
+  return true;
+})();
+</script>
+</body>
+</html>
