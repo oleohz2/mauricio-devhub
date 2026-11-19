@@ -1,6 +1,6 @@
 ---
 name: edicao-de-cortes
-description: Predefinição do Mauricio para editar cortes de live/stream (estilo viral ou estilo notícia com faixa branca de perfil), sempre com manchete-gancho tipo "ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6". Use quando ele pedir "cortes", "corta essa live", "faz uns cortes", "edita esse clipe", "tira os melhores momentos" ou mandar um vídeo/VOD de live. Entrega vertical 9:16 (1080x1920), até 60s, legenda palavra a palavra com destaque amarelo, áudio normalizado.
+description: Predefinição de edição de cortes de live/stream da página Clip Five6 (@clipfive6). Transforma VODs, lives e clipes longos em cortes verticais 9:16 (1080x1920, até 60s) prontos para Reels/TikTok/Shorts, com manchete-gancho tipo "ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6", legenda palavra a palavra e áudio normalizado, em dois estilos (viral ou notícia com faixa branca de perfil). Use sempre que o usuário pedir cortes, clipes, melhores momentos, highlights, "corta essa live", "edita esse clipe", "faz uns shorts/reels/tiktoks", ou mandar um vídeo/VOD/link de live ou gameplay para editar, mesmo que não diga "cortes".
 ---
 
 # Edição de cortes — predefinição
@@ -27,12 +27,14 @@ Padrão fixo dos dois estilos (só mude se o Mauricio pedir):
 | Áudio | loudnorm −14 LUFS, pico −1 dBTP |
 | Saída | pasta `cortes/` |
 
-Tudo é feito com `cortes.py` (nesta pasta). Rode a partir da raiz do projeto:
+Tudo é feito com `scripts/cortes.py`, dentro da pasta desta skill (a pasta base informada
+quando a skill é carregada). Rode a partir da pasta onde o trabalho deve ficar:
 
 ```bash
-C=.claude/skills/edicao-de-cortes/cortes.py
-python3 $C setup                      # 1x por sessão
+C=<pasta-da-skill>/scripts/cortes.py
+python3 $C setup                      # 1x por sessão: instala faster-whisper, yt-dlp, pillow (e ffmpeg se faltar)
 ```
+Fontes, logo e perfil já vêm na skill (`assets/` e `perfil.json`); não precisa baixar nada disso.
 
 ## Fluxo
 
@@ -131,9 +133,9 @@ python3 $C setup                      # 1x por sessão
      --titulo "ELE DESCOBRINDO UM NOVO EASTER EGG NO GTA 6:" --destaques "easter egg,gta 6"
    ```
    No `lote`, cada corte pode ter `"estilo": "noticia"`.
-   A faixa usa `perfil.json` (nesta pasta): `nome`, `usuario` (@), `foto` (caminho a partir
-   da raiz do repo), `verificado` (selo azul — só `true` se a conta for verificada de verdade)
-   e `cor_destaque` (ex: `"#E8112D"`, ou `null`). Perfil atual: página **Clip Five6** (@clipfive6) com o logo `logo-clip-five6.jpg`. Use sempre esse perfil, nunca
+   A faixa usa `perfil.json` (na pasta da skill): `nome`, `usuario` (@), `foto` (caminho
+   relativo à pasta da skill), `verificado` (selo azul — só `true` se a conta for verificada de verdade)
+   e `cor_destaque` (ex: `"#E8112D"`, ou `null`). Perfil atual: página **Clip Five6** (@clipfive6) com o logo `assets/logo-clip-five6.jpg`. Use sempre esse perfil, nunca
    nome/logo de outro canal ou marca.
 
    Opções úteis: `--legenda-y`, `--titulo-y` (no layout stream o título fica sobre a cam;
@@ -146,11 +148,13 @@ python3 $C setup                      # 1x por sessão
    manchete em no máximo 3 linhas e sem cobrir o rosto (se cobrir, use `--titulo-y`).
    Corrija nomes, gírias ou palavras erradas no `.palavras.json` antes de re-renderizar.
 
-7. **Entregar.** Envie os MP4 com `SendUserFile` e, para cada corte, sugira:
+7. **Entregar.** Envie os MP4 pela ferramenta de envio de arquivos do ambiente (ou salve na
+   pasta de saída e diga onde estão) e, para cada corte, sugira:
    título/legenda do post, 3–5 hashtags e o melhor trecho para thumbnail/capa.
 
 ## Observações
 
-- Vídeos, `.palavras.json` e `.transcricao.txt` ficam fora do git (`.gitignore`).
-- Fonte Anton (SIL OFL) em `fontes/` — já vem no repositório, não precisa baixar.
+- Se estiver num repositório git, não commite vídeos, `.palavras.json` nem `.transcricao.txt`.
+- Fontes Anton e Montserrat (SIL OFL) em `assets/fontes/`.
+- Para trocar o perfil da faixa (outra página/logo), edite `perfil.json` e o arquivo em `assets/`.
 - `CORTES_WHISPER_MODEL=/caminho/do/modelo` força um modelo local do faster-whisper.

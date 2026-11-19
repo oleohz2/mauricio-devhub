@@ -28,7 +28,8 @@ import tempfile
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
-FONTES = AQUI / "fontes"
+SKILL = AQUI.parent if AQUI.name == "scripts" else AQUI  # pasta raiz da skill
+FONTES = SKILL / "assets" / "fontes"
 FONTE = "Anton"
 
 W, H = 1080, 1920
@@ -117,9 +118,13 @@ def cmd_setup(_a):
         pkgs.append("pillow")
     if pkgs:
         run([sys.executable, "-m", "pip", "install", "-q", *pkgs])
+    if not (shutil.which("ffmpeg") and shutil.which("ffprobe")) and shutil.which("apt-get") \
+            and hasattr(os, "geteuid") and os.geteuid() == 0:
+        subprocess.run(["apt-get", "install", "-y", "-qq", "ffmpeg"], check=False)
     for b in ("ffmpeg", "ffprobe"):
         if not shutil.which(b):
-            sys.exit(f"ERRO: {b} não encontrado. Instale com: apt-get install -y ffmpeg")
+            sys.exit(f"ERRO: {b} não encontrado. Instale o ffmpeg (Linux: apt-get install ffmpeg; "
+                     "Mac: brew install ffmpeg; Windows: winget install ffmpeg)")
     print("ok: ffmpeg, faster-whisper, yt-dlp, pillow prontos")
 
 
@@ -378,11 +383,8 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
 
 # ------------------------------------------------------ cabeçalho "notícia"
 
-RAIZ = AQUI.parents[2]  # raiz do repositório
-
-
 def carregar_perfil(caminho: str | None) -> dict:
-    p = Path(caminho) if caminho else AQUI / "perfil.json"
+    p = Path(caminho) if caminho else SKILL / "perfil.json"
     perfil = {"nome": "Seu Nome", "usuario": "", "foto": "", "verificado": False, "cor_destaque": None}
     if p.exists():
         perfil.update(json.loads(p.read_text(encoding="utf-8")))
@@ -439,7 +441,7 @@ def gerar_cabecalho(titulo: str, perfil: dict, saida: Path) -> int:
     dr = ImageDraw.Draw(img)
 
     foto = perfil.get("foto")
-    caminho_foto = next((c for c in (Path(foto), RAIZ / foto, AQUI / foto) if foto and c.is_file()), None)
+    caminho_foto = next((c for c in (Path(foto), SKILL / foto, Path.cwd() / foto) if foto and c.is_file()), None)
     if caminho_foto:
         av = ImageOps.fit(Image.open(caminho_foto).convert("RGB"), (FOTO * 4, FOTO * 4))
         mask = Image.new("L", av.size, 0)
