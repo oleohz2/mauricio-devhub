@@ -133,7 +133,7 @@ python3 $C setup                      # 1x por sessão
    No `lote`, cada corte pode ter `"estilo": "noticia"`.
    A faixa usa `perfil.json` (nesta pasta): `nome`, `usuario` (@), `foto` (caminho a partir
    da raiz do repo), `verificado` (selo azul — só `true` se a conta for verificada de verdade)
-   e `cor_destaque` (ex: `"#E8112D"`, ou `null`). Perfil atual: página **Clip Five6** com o logo `logo-clip-five6.jpg`. Use sempre esse perfil, nunca
+   e `cor_destaque` (ex: `"#E8112D"`, ou `null`). Perfil atual: página **Clip Five6** (@clipfive6) com o logo `logo-clip-five6.jpg`. Use sempre esse perfil, nunca
    nome/logo de outro canal ou marca.
 
    Opções úteis: `--legenda-y`, `--titulo-y` (no layout stream o título fica sobre a cam;
