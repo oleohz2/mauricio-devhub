@@ -446,6 +446,7 @@ def gerar_cabecalho(titulo: str, perfil: dict, saida: Path) -> int:
         ImageDraw.Draw(mask).ellipse((0, 0, *av.size), fill=255)
         av = av.resize((FOTO, FOTO), Image.LANCZOS)
         img.paste(av, (MARGEM, TOPO), mask.resize((FOTO, FOTO), Image.LANCZOS))
+        dr.ellipse((MARGEM, TOPO, MARGEM + FOTO, TOPO + FOTO), outline=(225, 232, 237), width=2)
     else:
         dr.ellipse((MARGEM, TOPO, MARGEM + FOTO, TOPO + FOTO), fill=(220, 220, 220))
 
