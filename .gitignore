@@ -5,3 +5,4 @@ cortes/
 *.mov
 *.palavras.json
 *.transcricao.txt
+__pycache__/
