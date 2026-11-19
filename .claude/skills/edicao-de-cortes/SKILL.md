@@ -1,11 +1,21 @@
 ---
 name: edicao-de-cortes
-description: Predefinição do Mauricio para editar cortes de live/stream, sempre com manchete-gancho tipo "ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6". Use quando ele pedir "cortes", "corta essa live", "faz uns cortes", "edita esse clipe", "tira os melhores momentos" ou mandar um vídeo/VOD de live. Entrega vertical 9:16 (1080x1920), até 60s, legenda palavra a palavra com destaque amarelo, áudio normalizado.
+description: Predefinição do Mauricio para editar cortes de live/stream (estilo viral ou estilo notícia com faixa branca de perfil), sempre com manchete-gancho tipo "ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6". Use quando ele pedir "cortes", "corta essa live", "faz uns cortes", "edita esse clipe", "tira os melhores momentos" ou mandar um vídeo/VOD de live. Entrega vertical 9:16 (1080x1920), até 60s, legenda palavra a palavra com destaque amarelo, áudio normalizado.
 ---
 
 # Edição de cortes — predefinição
 
-Padrão fixo (só mude se o Mauricio pedir):
+Há **dois estilos**. Use o **viral** por padrão; use o **notícia** quando o Mauricio pedir
+"estilo notícia", "modelo da TNT", "estilo post", "com a faixa branca" ou "segunda opção".
+
+| | Estilo 1 — `viral` (padrão) | Estilo 2 — `noticia` |
+|---|---|---|
+| Visual | vídeo em tela cheia, manchete em caixa preta no topo | faixa branca no topo com foto + nome + @ do perfil e a manchete em preto, vídeo ocupando o resto embaixo |
+| Manchete | Anton, palavras-chave em amarelo | Montserrat ExtraBold, preta, alinhada à esquerda, até 4 linhas |
+| Legenda | palavra a palavra, MAIÚSCULAS, destaque amarelo/verde | frase inteira, como foi falada, branca com contorno, palavras-chave em amarelo |
+| Comando | `--estilo viral` (ou nada) | `--estilo noticia` |
+
+Padrão fixo dos dois estilos (só mude se o Mauricio pedir):
 
 | Item | Valor |
 |---|---|
@@ -74,6 +84,12 @@ python3 $C setup                      # 1x por sessão
    - "ELE REVELOU O QUE ACHA DO *GTA 6*"
    - "ELE QUEBROU O TECLADO DEPOIS DESSA MORTE"
 
+   **Manchete no estilo notícia:** mesmo princípio, mas descrevendo a cena, como post de
+   portal de notícias, terminando em dois-pontos. Ex: "MBAPPÉ RESPONDENDO QUAL É O MELHOR
+   'BOLA DE OURO' DA HISTÓRIA:" → "ELE DESCOBRINDO UM NOVO EASTER EGG NO GTA 6:",
+   "A REAÇÃO DO CHAT QUANDO ELE ACHOU O EASTER EGG NO GTA 6:". Pode ser um pouco mais
+   longa (até ~70 caracteres); `*asteriscos*` só colorem se `cor_destaque` estiver no perfil.
+
    **Palavras-chave na legenda:** passe as mesmas palavras do momento com
    `--destaques "easter egg,gta 6"` — elas aparecem em verde na legenda e crescem quando
    ele fala, reforçando a frase impactante.
@@ -109,6 +125,17 @@ python3 $C setup                      # 1x por sessão
    ```bash
    python3 $C lote brutos/live.mp4 cortes.json --layout stream --cam 1460:690:440:370
    ```
+   Estilo notícia (mesmos layouts; sem `--cam` o vídeo preenche a área de baixo):
+   ```bash
+   python3 $C render brutos/live.mp4 --inicio 1:23:05.4 --fim 1:23:41 --estilo noticia \
+     --titulo "ELE DESCOBRINDO UM NOVO EASTER EGG NO GTA 6:" --destaques "easter egg,gta 6"
+   ```
+   No `lote`, cada corte pode ter `"estilo": "noticia"`.
+   A faixa usa `perfil.json` (nesta pasta): `nome`, `usuario` (@), `foto` (caminho a partir
+   da raiz do repo), `verificado` (selo azul — só `true` se a conta for verificada de verdade)
+   e `cor_destaque` (ex: `"#E8112D"`, ou `null`). Use sempre o perfil do Mauricio, nunca
+   nome/logo de outro canal ou marca.
+
    Opções úteis: `--legenda-y`, `--titulo-y` (no layout stream o título fica sobre a cam;
    se cobrir o rosto, mova com ex. `--titulo-y 1750`), `--tamanho` (padrão 110), `--palavras-por-vez`,
    `--fps 60` (jogo rápido), `--sem-legenda`.

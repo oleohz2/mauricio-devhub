@@ -16,6 +16,7 @@ Subcomandos:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
 import os
@@ -110,12 +111,16 @@ def cmd_setup(_a):
         pkgs.append("faster-whisper")
     if not shutil.which("yt-dlp"):
         pkgs.append("yt-dlp")
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        pkgs.append("pillow")
     if pkgs:
         run([sys.executable, "-m", "pip", "install", "-q", *pkgs])
     for b in ("ffmpeg", "ffprobe"):
         if not shutil.which(b):
             sys.exit(f"ERRO: {b} não encontrado. Instale com: apt-get install -y ffmpeg")
-    print("ok: ffmpeg, faster-whisper, yt-dlp prontos")
+    print("ok: ffmpeg, faster-whisper, yt-dlp, pillow prontos")
 
 
 # --------------------------------------------------------------------- baixar
@@ -290,7 +295,7 @@ def titulo_ass(titulo: str, max_chars: int = 22) -> str:
 
 def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
               tamanho: int, max_palavras: int, titulo: str | None, titulo_y: int,
-              destaques=None) -> str:
+              destaques=None, legenda_estilo: str = "viral") -> str:
     chaves = lista_destaques(destaques)
     dur = fim - inicio
     ws = []
@@ -312,6 +317,7 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
         "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, "
         "Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
         f"Style: Legenda,{FONTE},{tamanho},{BRANCO},{BRANCO},{PRETO},&H96000000,0,0,0,0,100,100,1,0,1,7,4,5,60,60,0,1",
+        f"Style: Simples,Montserrat,{round(tamanho * 0.56)},{BRANCO},{BRANCO},&H20000000,&H80000000,1,0,0,0,100,100,0,0,1,4,3,5,70,70,0,1",
         f"Style: Titulo,{FONTE},80,{BRANCO},{BRANCO},&H1A000000,&H00000000,0,0,0,0,100,100,1,0,3,20,0,5,60,60,0,1",
         "",
         "[Events]",
@@ -324,6 +330,25 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
             f"{{\\pos({W // 2},{titulo_y})\\fscx70\\fscy70\\t(0,160,\\fscx100\\fscy100)}}"
             f"{titulo_ass(titulo)}"
         )
+
+    if legenda_estilo == "simples":
+        # Frase inteira por vez, como foi falada (sem caixa alta), palavras-chave em amarelo
+        grupos = agrupar(ws, max(6, max_palavras), max_dur=2.6, pausa=0.6)
+        for n, g in enumerate(grupos):
+            fim_g = g[-1]["e"] + 0.2
+            if n + 1 < len(grupos):
+                fim_g = min(fim_g, grupos[n + 1][0]["s"])
+            limpo = lambda t: t.replace("{", "(").replace("}", ")").replace("\\", "/")
+            txt = " ".join(
+                f"{{\\c{AMARELO}}}{limpo(x['w'])}{{\\c{BRANCO}}}" if normalizar(x["w"]) in chaves
+                else limpo(x["w"])
+                for x in g
+            )
+            linhas.append(
+                f"Dialogue: 0,{ass_tempo(g[0]['s'])},{ass_tempo(fim_g)},Simples,,0,0,0,,"
+                f"{{\\pos({W // 2},{legenda_y})}}{txt}"
+            )
+        return "\n".join(linhas) + "\n"
 
     for g in agrupar(ws, max_palavras):
         g_fim = g[-1]["e"] + 0.15
@@ -351,6 +376,101 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
     return "\n".join(linhas) + "\n"
 
 
+# ------------------------------------------------------ cabeçalho "notícia"
+
+RAIZ = AQUI.parents[2]  # raiz do repositório
+
+
+def carregar_perfil(caminho: str | None) -> dict:
+    p = Path(caminho) if caminho else AQUI / "perfil.json"
+    perfil = {"nome": "Seu Nome", "usuario": "", "foto": "", "verificado": False, "cor_destaque": None}
+    if p.exists():
+        perfil.update(json.loads(p.read_text(encoding="utf-8")))
+    return perfil
+
+
+def gerar_cabecalho(titulo: str, perfil: dict, saida: Path) -> int:
+    """Faixa branca com foto, nome, @ e a manchete. Salva PNG e retorna a altura."""
+    from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+    MARGEM, TOPO, FOTO = 48, 120, 124
+    PRETO_TXT, CINZA = (15, 20, 25), (83, 100, 113)
+    destaque = perfil.get("cor_destaque") or None
+    f_nome = ImageFont.truetype(str(FONTES / "Montserrat-Bold.ttf"), 46)
+    f_user = ImageFont.truetype(str(FONTES / "Montserrat-Medium.ttf"), 38)
+
+    # Manchete: quebra pela largura real do texto; diminui a fonte se passar de 4 linhas
+    tokens, d = [], False
+    for parte in re.split(r"(\*)", titulo):
+        if parte == "*":
+            d = not d
+            continue
+        tokens += [(w.upper(), d) for w in parte.split()]
+    colados = []
+    for w, dd in tokens:
+        if colados and (len(colados[-1][0]) <= 2 or re.fullmatch(r"[\d.,R$%]+", colados[-1][0])) \
+                and colados[-1][1] == dd and " " not in colados[-1][0][-3:]:
+            colados[-1] = (colados[-1][0] + "\u00a0" + w, dd)
+        else:
+            colados.append((w, dd))
+    tokens = colados
+    largura = W - 2 * MARGEM
+    for tam in (72, 68, 64, 60, 56, 52):
+        f_tit = ImageFont.truetype(str(FONTES / "Montserrat-ExtraBold.ttf"), tam)
+        espaco = f_tit.getlength(" ")
+        linhas, atual, larg = [], [], 0.0
+        for w, dd in tokens:
+            lw = f_tit.getlength(w)
+            if atual and larg + espaco + lw > largura:
+                linhas.append(atual)
+                atual, larg = [], 0.0
+            larg += (espaco if atual else 0) + lw
+            atual.append((w, dd, lw))
+        if atual:
+            linhas.append(atual)
+        if len(linhas) <= 4:
+            break
+    passo = round(tam * 1.12)
+    y_tit = TOPO + FOTO + 44
+    altura = y_tit + passo * len(linhas) + 44
+    altura += altura % 2
+
+    img = Image.new("RGB", (W, altura), "white")
+    dr = ImageDraw.Draw(img)
+
+    foto = perfil.get("foto")
+    caminho_foto = next((c for c in (Path(foto), RAIZ / foto, AQUI / foto) if foto and c.is_file()), None)
+    if caminho_foto:
+        av = ImageOps.fit(Image.open(caminho_foto).convert("RGB"), (FOTO * 4, FOTO * 4))
+        mask = Image.new("L", av.size, 0)
+        ImageDraw.Draw(mask).ellipse((0, 0, *av.size), fill=255)
+        av = av.resize((FOTO, FOTO), Image.LANCZOS)
+        img.paste(av, (MARGEM, TOPO), mask.resize((FOTO, FOTO), Image.LANCZOS))
+    else:
+        dr.ellipse((MARGEM, TOPO, MARGEM + FOTO, TOPO + FOTO), fill=(220, 220, 220))
+
+    x_txt = MARGEM + FOTO + 26
+    tem_user = bool(perfil.get("usuario"))
+    y_nome = TOPO + (14 if tem_user else 36)
+    dr.text((x_txt, y_nome), perfil["nome"], font=f_nome, fill=PRETO_TXT)
+    if perfil.get("verificado"):
+        r, cx = 20, x_txt + f_nome.getlength(perfil["nome"]) + 14 + 20
+        cy = y_nome + 30
+        dr.ellipse((cx - r, cy - r, cx + r, cy + r), fill=(29, 155, 240))
+        dr.line([(cx - 9, cy + 1), (cx - 2, cy + 8), (cx + 10, cy - 7)], fill="white", width=5, joint="curve")
+    if tem_user:
+        u = perfil["usuario"]
+        dr.text((x_txt, TOPO + 72), u if u.startswith("@") else "@" + u, font=f_user, fill=CINZA)
+
+    for i, linha in enumerate(linhas):
+        x = MARGEM
+        for w, dd, lw in linha:
+            dr.text((x, y_tit + i * passo), w, font=f_tit, fill=(destaque if dd and destaque else PRETO_TXT))
+            x += lw + espaco
+    img.save(saida)
+    return altura
+
+
 # --------------------------------------------------------------------- layout
 
 def preencher(rotulo_in: str, rotulo_out: str, w: int, h: int) -> str:
@@ -359,8 +479,9 @@ def preencher(rotulo_in: str, rotulo_out: str, w: int, h: int) -> str:
             f"crop={w}:{h},setsar=1[{rotulo_out}]")
 
 
-def filtro_layout(a, src: dict) -> tuple[str, int, int]:
-    """Retorna (filtro que termina em [base], legenda_y padrão, titulo_y padrão)."""
+def filtro_layout(a, src: dict, H: int = H) -> tuple[str, int, int]:
+    """Monta o vídeo numa área W x H. Retorna (filtro que termina em [base],
+    legenda_y padrão, titulo_y padrão), relativos à área."""
     layout = a.layout
     cam = regiao(a.cam)
     if layout == "auto":
@@ -384,7 +505,7 @@ def filtro_layout(a, src: dict) -> tuple[str, int, int]:
         cw = min(src["w"], round(src["h"] * W / H / 2) * 2)
         x = round((src["w"] - cw) * a.foco)
         f = f"[0:v]crop={cw}:{src['h']}:{x}:0,scale={W}:{H},setsar=1[base]"
-        return f, 1380, 260
+        return f, round(H * 0.72), 260
 
     if layout == "stream":
         if not cam:
@@ -423,14 +544,31 @@ def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str |
     if fim - inicio > DURACAO_MAX and not a.forcar:
         sys.exit(f"corte de {fim - inicio:.1f}s passa de {DURACAO_MAX:.0f}s (use --forcar para ignorar)")
 
-    filtro, legenda_y, titulo_y = filtro_layout(a, src)
+    tmp = Path(tempfile.mkdtemp(prefix="corte_"))
+    estilo = getattr(a, "estilo", "viral")
+    legenda_estilo = a.legenda_estilo or ("simples" if estilo == "noticia" else "viral")
+    entradas = []
+    if estilo == "noticia":
+        if a.layout == "auto" and not a.cam:
+            a.layout = "crop"  # vídeo preenchendo a área de baixo, como no modelo
+        if not titulo:
+            sys.exit("o estilo 'noticia' precisa de --titulo (a manchete da faixa branca)")
+        topo = gerar_cabecalho(titulo, carregar_perfil(a.perfil), tmp / "cabecalho.png")
+        filtro, legenda_y, _ = filtro_layout(a, src, H - topo)
+        em_stream = a.layout == "stream" or (a.layout == "auto" and a.cam)
+        legenda_y = topo + (legenda_y if em_stream else round((H - topo) * 0.74))
+        filtro += f";[1:v]format=rgb24,setsar=1[cab];[cab][base]vstack=inputs=2[base2]"
+        entradas = ["-loop", "1", "-i", str(tmp / "cabecalho.png")]
+        ultimo = "base2"
+        titulo_y, titulo = 0, None  # manchete já está na faixa
+    else:
+        filtro, legenda_y, titulo_y = filtro_layout(a, src)
+        ultimo = "base"
     if a.legenda_y is not None:
         legenda_y = a.legenda_y
     if a.titulo_y is not None:
         titulo_y = a.titulo_y
 
-    tmp = Path(tempfile.mkdtemp(prefix="corte_"))
-    ultimo = "base"
     pal_path = Path(a.palavras) if a.palavras else arquivo_palavras(video)
     palavras = []
     if not a.sem_legenda:
@@ -443,15 +581,15 @@ def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str |
         ass = tmp / "legenda.ass"
         ass.write_text(gerar_ass(palavras if not a.sem_legenda else [], inicio, fim, legenda_y,
                                  a.tamanho, a.palavras_por_vez, titulo, titulo_y,
-                                 destaques), encoding="utf-8")
-        filtro += f";[base]ass={ass}:fontsdir={FONTES}[v]"
+                                 destaques, legenda_estilo), encoding="utf-8")
+        filtro += f";[{ultimo}]ass={ass}:fontsdir={FONTES}[v]"
         ultimo = "v"
     filtro += f";[{ultimo}]fps={a.fps},format=yuv420p[vout]"
 
     saida.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-stats",
-           "-ss", f"{inicio:.3f}", "-t", f"{fim - inicio:.3f}", "-i", str(video),
-           "-filter_complex", filtro, "-map", "[vout]"]
+           "-ss", f"{inicio:.3f}", "-t", f"{fim - inicio:.3f}", "-i", str(video), *entradas,
+           "-filter_complex", filtro, "-map", "[vout]", "-t", f"{fim - inicio:.3f}"]
     if src["audio"]:
         cmd += ["-map", "0:a:0", "-af", "loudnorm=I=-14:TP=-1.0:LRA=11,aresample=48000",
                 "-c:a", "aac", "-b:a", "192k"]
@@ -476,12 +614,13 @@ def cmd_lote(a):
     pasta = Path(a.pasta)
     for n, c in enumerate(lista, 1):
         nome = c.get("nome") or f"corte{n:02d}"
-        for k in ("layout", "cam", "jogo", "legenda_y", "titulo_y"):
+        op = copy.copy(a)  # opções deste corte não vazam para os próximos
+        for k in ("estilo", "layout", "cam", "jogo", "legenda_y", "titulo_y", "legenda_estilo"):
             if k in c:
-                setattr(a, k, c[k])
+                setattr(op, k, c[k])
         if not c.get("titulo"):
             print(f"aviso: {nome} está sem manchete (titulo) — todo corte deve ter uma.", file=sys.stderr)
-        render(a, video, tempo(c["inicio"]), tempo(c["fim"]), pasta / f"{nome}.mp4",
+        render(op, video, tempo(c["inicio"]), tempo(c["fim"]), pasta / f"{nome}.mp4",
                c.get("titulo"), c.get("destaques", a.destaques))
 
 
@@ -522,6 +661,12 @@ def main():
     s.set_defaults(fn=cmd_frame)
 
     def opcoes_render(s):
+        s.add_argument("--estilo", default="viral", choices=["viral", "noticia"],
+                       help="viral = manchete em caixa preta + legenda palavra a palavra; "
+                            "noticia = faixa branca com perfil e manchete, vídeo embaixo")
+        s.add_argument("--perfil", help="JSON do perfil da faixa (padrão: perfil.json da skill)")
+        s.add_argument("--legenda-estilo", choices=["viral", "simples"],
+                       help="padrão: viral no estilo viral, simples no estilo noticia")
         s.add_argument("--layout", default="auto", choices=["auto", "blur", "crop", "stream"])
         s.add_argument("--cam", help="facecam x:y:w:h no vídeo original (layout stream)")
         s.add_argument("--jogo", help="área do jogo x:y:w:h (opcional, layout stream)")
