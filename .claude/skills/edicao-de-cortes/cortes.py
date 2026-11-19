@@ -37,6 +37,7 @@ DURACAO_MAX = 60.0
 BRANCO = "&H00FFFFFF"
 AMARELO = "&H0000E5FF"  # amarelo forte (#FFE500)
 PRETO = "&H00000000"
+VERDE = "&H0014FF39"  # verde neon (#39FF14) para palavras-chave
 
 
 # ----------------------------------------------------------------- utilidades
@@ -239,8 +240,58 @@ def limpar(txt: str) -> str:
     return txt.upper()
 
 
+def normalizar(txt: str) -> str:
+    return re.sub(r"[^\w]", "", txt.lower())
+
+
+def lista_destaques(destaques) -> set[str]:
+    if not destaques:
+        return set()
+    if isinstance(destaques, str):
+        destaques = destaques.split(",")
+    return {normalizar(p) for d in destaques for p in d.split() if normalizar(p)}
+
+
+def equilibrar(tokens: list, max_chars: int) -> list[list]:
+    """Quebra em poucas linhas de tamanho parecido (evita palavra sozinha no fim)."""
+    from itertools import combinations
+
+    n = len(tokens)
+    tam = lambda ts: sum(len(w) for w, _ in ts) + max(0, len(ts) - 1)
+    for k in range(1, min(4, n) + 1):
+        melhor = None
+        for cortes in combinations(range(1, n), k - 1):
+            idx = (0, *cortes, n)
+            ls = [tokens[idx[i]:idx[i + 1]] for i in range(k)]
+            pior = max(tam(l) for l in ls)
+            if melhor is None or pior < melhor[0]:
+                melhor = (pior, ls)
+        if melhor and melhor[0] <= max_chars:
+            return melhor[1]
+    return melhor[1] if melhor else [tokens]
+
+
+def titulo_ass(titulo: str, max_chars: int = 22) -> str:
+    """Manchete em até 3 linhas; trechos entre *asteriscos* ficam em amarelo."""
+    tokens, destaque = [], False
+    for parte in re.split(r"(\*)", titulo):
+        if parte == "*":
+            destaque = not destaque
+            continue
+        if destaque and parte.strip():
+            tokens.append((limpar(parte.strip()), True))  # destaque não quebra no meio
+            continue
+        for w in parte.split():
+            tokens.append((limpar(w), destaque))
+    linhas = equilibrar(tokens, max_chars)
+    fmt = lambda w, d: f"{{\\c{AMARELO}}}{w}{{\\c{BRANCO}}}" if d else w
+    return "\\N".join(" ".join(fmt(w, d) for w, d in l) for l in linhas)
+
+
 def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
-              tamanho: int, max_palavras: int, titulo: str | None, titulo_y: int) -> str:
+              tamanho: int, max_palavras: int, titulo: str | None, titulo_y: int,
+              destaques=None) -> str:
+    chaves = lista_destaques(destaques)
     dur = fim - inicio
     ws = []
     for w in palavras:
@@ -261,7 +312,7 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
         "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, "
         "Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
         f"Style: Legenda,{FONTE},{tamanho},{BRANCO},{BRANCO},{PRETO},&H96000000,0,0,0,0,100,100,1,0,1,7,4,5,60,60,0,1",
-        f"Style: Titulo,{FONTE},78,{PRETO},{PRETO},{BRANCO},&H00FFFFFF,0,0,0,0,100,100,1,0,3,18,0,5,80,80,0,1",
+        f"Style: Titulo,{FONTE},80,{BRANCO},{BRANCO},&H1A000000,&H00000000,0,0,0,0,100,100,1,0,3,20,0,5,60,60,0,1",
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -270,7 +321,8 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
     if titulo:
         linhas.append(
             f"Dialogue: 1,{ass_tempo(0)},{ass_tempo(dur)},Titulo,,0,0,0,,"
-            f"{{\\pos({W // 2},{titulo_y})}}{limpar(titulo)}"
+            f"{{\\pos({W // 2},{titulo_y})\\fscx70\\fscy70\\t(0,160,\\fscx100\\fscy100)}}"
+            f"{titulo_ass(titulo)}"
         )
 
     for g in agrupar(ws, max_palavras):
@@ -283,7 +335,14 @@ def gerar_ass(palavras: list[dict], inicio: float, fim: float, legenda_y: int,
             partes = []
             for j, x in enumerate(g):
                 t = limpar(x["w"])
-                partes.append(f"{{\\c{AMARELO}}}{t}{{\\c{BRANCO}}}" if j == i else t)
+                chave = normalizar(x["w"]) in chaves
+                if chave and j == i:
+                    t = f"{{\\c{VERDE}\\fscx118\\fscy118}}{t}{{\\c{BRANCO}\\fscx100\\fscy100}}"
+                elif chave:
+                    t = f"{{\\c{VERDE}}}{t}{{\\c{BRANCO}}}"
+                elif j == i:
+                    t = f"{{\\c{AMARELO}}}{t}{{\\c{BRANCO}}}"
+                partes.append(t)
             pop = "\\fscx85\\fscy85\\t(0,90,\\fscx100\\fscy100)" if i == 0 else ""
             linhas.append(
                 f"Dialogue: 0,{ass_tempo(ini)},{ass_tempo(fim_w)},Legenda,,0,0,0,,"
@@ -349,14 +408,15 @@ def filtro_layout(a, src: dict) -> tuple[str, int, int]:
             + preencher("j1", "jogo", W, resto) + ";"
             "[cam][jogo]vstack=inputs=2[base]"
         )
-        return f, topo, 150
+        return f, topo, 140
 
     sys.exit(f"layout desconhecido: {layout}")
 
 
 # --------------------------------------------------------------------- render
 
-def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str | None):
+def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str | None,
+           destaques=None):
     src = info(video)
     if fim <= inicio:
         sys.exit("o fim precisa ser depois do início")
@@ -382,7 +442,8 @@ def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str |
     if palavras or titulo:
         ass = tmp / "legenda.ass"
         ass.write_text(gerar_ass(palavras if not a.sem_legenda else [], inicio, fim, legenda_y,
-                                 a.tamanho, a.palavras_por_vez, titulo, titulo_y), encoding="utf-8")
+                                 a.tamanho, a.palavras_por_vez, titulo, titulo_y,
+                                 destaques), encoding="utf-8")
         filtro += f";[base]ass={ass}:fontsdir={FONTES}[v]"
         ultimo = "v"
     filtro += f";[{ultimo}]fps={a.fps},format=yuv420p[vout]"
@@ -404,11 +465,12 @@ def render(a, video: Path, inicio: float, fim: float, saida: Path, titulo: str |
 def cmd_render(a):
     video = Path(a.video)
     saida = Path(a.saida or Path("cortes") / f"{video.stem}_{int(tempo(a.inicio))}s.mp4")
-    render(a, video, tempo(a.inicio), tempo(a.fim), saida, a.titulo)
+    render(a, video, tempo(a.inicio), tempo(a.fim), saida, a.titulo, a.destaques)
 
 
 def cmd_lote(a):
-    """JSON: [{"nome": "corte1", "inicio": "1:02:10", "fim": "1:02:48", "titulo": "..."}]"""
+    """JSON: [{"nome": "corte1", "inicio": "1:02:10", "fim": "1:02:48",
+               "titulo": "ELE DESCOBRIU UM *EASTER EGG* NO *GTA 6*", "destaques": ["easter egg", "gta 6"]}]"""
     video = Path(a.video)
     lista = json.loads(Path(a.lista).read_text(encoding="utf-8"))
     pasta = Path(a.pasta)
@@ -417,7 +479,10 @@ def cmd_lote(a):
         for k in ("layout", "cam", "jogo", "legenda_y", "titulo_y"):
             if k in c:
                 setattr(a, k, c[k])
-        render(a, video, tempo(c["inicio"]), tempo(c["fim"]), pasta / f"{nome}.mp4", c.get("titulo"))
+        if not c.get("titulo"):
+            print(f"aviso: {nome} está sem manchete (titulo) — todo corte deve ter uma.", file=sys.stderr)
+        render(a, video, tempo(c["inicio"]), tempo(c["fim"]), pasta / f"{nome}.mp4",
+               c.get("titulo"), c.get("destaques", a.destaques))
 
 
 # ------------------------------------------------------------------------ CLI
@@ -464,6 +529,7 @@ def main():
         s.add_argument("--foco", type=float, default=0.5, help="layout crop: 0 esquerda .. 1 direita")
         s.add_argument("--palavras", help="arquivo .palavras.json (padrão: ao lado do vídeo)")
         s.add_argument("--sem-legenda", action="store_true")
+        s.add_argument("--destaques", help="palavras-chave em verde na legenda, ex: 'easter egg,gta 6'")
         s.add_argument("--legenda-y", type=int)
         s.add_argument("--titulo-y", type=int, help="posição vertical do título (0 = topo, 1920 = base)")
         s.add_argument("--tamanho", type=int, default=110, help="tamanho da fonte da legenda")
@@ -478,7 +544,7 @@ def main():
     s.add_argument("--inicio", required=True)
     s.add_argument("--fim", required=True)
     s.add_argument("--saida")
-    s.add_argument("--titulo", help="texto-gancho fixo no topo")
+    s.add_argument("--titulo", help="manchete-gancho; *palavras* entre asteriscos ficam em amarelo")
     opcoes_render(s)
     s.set_defaults(fn=cmd_render)
 

@@ -1,6 +1,6 @@
 ---
 name: edicao-de-cortes
-description: Predefinição do Mauricio para editar cortes de live/stream. Use quando ele pedir "cortes", "corta essa live", "faz uns cortes", "edita esse clipe", "tira os melhores momentos" ou mandar um vídeo/VOD de live. Entrega vertical 9:16 (1080x1920), até 60s, legenda palavra a palavra com destaque amarelo, áudio normalizado.
+description: Predefinição do Mauricio para editar cortes de live/stream, sempre com manchete-gancho tipo "ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6". Use quando ele pedir "cortes", "corta essa live", "faz uns cortes", "edita esse clipe", "tira os melhores momentos" ou mandar um vídeo/VOD de live. Entrega vertical 9:16 (1080x1920), até 60s, legenda palavra a palavra com destaque amarelo, áudio normalizado.
 ---
 
 # Edição de cortes — predefinição
@@ -12,7 +12,8 @@ Padrão fixo (só mude se o Mauricio pedir):
 | Conteúdo | live / stream (facecam + jogo/tela) |
 | Formato | vertical 9:16, 1080x1920, 30 fps, H.264 + AAC, `+faststart` |
 | Duração | 15–60 s por corte (o script recusa > 60 s sem `--forcar`) |
-| Legenda | palavra a palavra, até 3 palavras por vez, MAIÚSCULAS, fonte Anton, branca com contorno preto, palavra falada em **amarelo** (#FFE500), "pop" no início de cada grupo |
+| Manchete | **obrigatória em todo corte** — frase-gancho tipo notícia no topo ("ELE DESCOBRIU UM NOVO EASTER EGG NO GTA 6"), caixa preta, texto branco, palavras-chave em amarelo |
+| Legenda | palavra a palavra, até 3 palavras por vez, MAIÚSCULAS, fonte Anton, branca com contorno preto, palavra falada em **amarelo** (#FFE500), palavras-chave do momento em **verde** (#39FF14) e maiores quando faladas, "pop" no início de cada grupo |
 | Áudio | loudnorm −14 LUFS, pico −1 dBTP |
 | Saída | pasta `cortes/` |
 
@@ -44,13 +45,38 @@ python3 $C setup                      # 1x por sessão
      piada com punchline, frase polêmica ou "citável", história curta com desfecho.
    Regras de um bom corte:
    - **Gancho nos 2 primeiros segundos** — comece na frase/ação mais forte, nunca em silêncio,
-     "então...", ou contexto lento. Se precisar de contexto, use o `--titulo`.
+     "então...", ou contexto lento. O contexto vem da manchete (passo 3b).
    - **Termine no payoff** (reação, risada, resultado) — corte logo depois, sem cauda.
    - Comece/termine em limite de palavra: use os tempos do `.palavras.json`
      (início ≈ `s` da 1ª palavra − 0.15 s; fim ≈ `e` da última + 0.3 s).
    - Um assunto por corte. 20–45 s costuma performar melhor; 60 s é o teto.
-   Apresente a lista de cortes propostos (tempo, duração, por que funciona, título-gancho)
+   Apresente a lista de cortes propostos (tempo, duração, por que funciona, manchete)
    antes de renderizar, a não ser que ele tenha pedido para já entregar.
+
+3b. **Escrever a manchete de cada corte (sempre).** Toda vez que achar um momento
+   impactante, transforme-o numa manchete curta, como se fosse notícia, e coloque no
+   topo do vídeo com `--titulo`. Exemplo do Mauricio:
+   **"ELE DESCOBRIU UM NOVO \*EASTER EGG\* NO \*GTA 6\*"**.
+   Como escrever:
+   - Diga **o que aconteceu**, em 3ª pessoa: "ELE...", "O CHAT...", "O STREAMER...".
+   - Seja **específico**: nome do jogo, item, valor, número, pessoa (GTA 6, R$ 50 MIL, 1 HP,
+     TOP 1, 3 HORAS). Específico prende mais do que genérico ("OLHA ISSO").
+   - Crie **curiosidade sem entregar o final**: a manchete promete, o vídeo paga.
+     Bom: "ELE ACHOU UMA PASSAGEM SECRETA NO *GTA 6*". Ruim: "ELE ENTROU NA PASSAGEM E ACHOU UM CARRO".
+   - Verbos fortes: DESCOBRIU, ACHOU, PERDEU, GANHOU, HUMILHOU, REVELOU, QUEBROU, NÃO ACREDITOU.
+   - 4 a 10 palavras (até ~45 caracteres), MAIÚSCULAS, sem ponto final e sem emoji (a fonte não tem emoji; ponha emoji só na legenda do post).
+   - Marque **1–2 palavras-chave** entre `*asteriscos*` → ficam em amarelo.
+   - **Nunca mentir**: a manchete tem que ser verdade no que aparece no corte. Se não tiver
+     certeza (ex: se é mesmo "novo"), use algo que o vídeo comprova ("ELE ACHOU UM *EASTER EGG* NO *GTA 6*").
+   Mais modelos:
+   - "ELE PERDEU *R$ 50 MIL* EM UMA ÚNICA APOSTA"
+   - "O CHAT NÃO ACREDITOU NESSA JOGADA COM *1 HP*"
+   - "ELE REVELOU O QUE ACHA DO *GTA 6*"
+   - "ELE QUEBROU O TECLADO DEPOIS DESSA MORTE"
+
+   **Palavras-chave na legenda:** passe as mesmas palavras do momento com
+   `--destaques "easter egg,gta 6"` — elas aparecem em verde na legenda e crescem quando
+   ele fala, reforçando a frase impactante.
 
 4. **Definir o layout.** Tire um quadro e olhe a imagem:
    ```bash
@@ -67,14 +93,17 @@ python3 $C setup                      # 1x por sessão
 5. **Renderizar.**
    ```bash
    python3 $C render brutos/live.mp4 --inicio 1:23:05.4 --fim 1:23:41 \
-     --layout stream --cam 1460:690:440:370 --titulo "ELE NÃO ACREDITOU" \
-     --saida cortes/01-jogada-absurda.mp4
+     --layout stream --cam 1460:690:440:370 \
+     --titulo "ELE DESCOBRIU UM NOVO *EASTER EGG* NO *GTA 6*" --destaques "easter egg,gta 6" \
+     --saida cortes/01-easter-egg-gta6.mp4
    ```
    Vários de uma vez com um JSON:
    ```json
    [
-     {"nome": "01-jogada-absurda", "inicio": "1:23:05.4", "fim": "1:23:41", "titulo": "ELE NÃO ACREDITOU"},
-     {"nome": "02-rage", "inicio": "2:10:12", "fim": "2:10:50"}
+     {"nome": "01-easter-egg-gta6", "inicio": "1:23:05.4", "fim": "1:23:41",
+      "titulo": "ELE DESCOBRIU UM NOVO *EASTER EGG* NO *GTA 6*", "destaques": ["easter egg", "gta 6"]},
+     {"nome": "02-rage", "inicio": "2:10:12", "fim": "2:10:50",
+      "titulo": "ELE QUEBROU O *TECLADO* DEPOIS DESSA MORTE", "destaques": ["teclado"]}
    ]
    ```
    ```bash
@@ -86,7 +115,8 @@ python3 $C setup                      # 1x por sessão
 
 6. **Conferir antes de entregar.** Para cada corte, tire 1–2 quadros do resultado
    (`python3 $C frame cortes/01-....mp4 2`) e verifique: cam/jogo bem enquadrados,
-   legenda legível e sem cobrir rosto/HUD importante, gancho forte no início.
+   legenda legível e sem cobrir rosto/HUD importante, gancho forte no início,
+   manchete em no máximo 3 linhas e sem cobrir o rosto (se cobrir, use `--titulo-y`).
    Corrija nomes, gírias ou palavras erradas no `.palavras.json` antes de re-renderizar.
 
 7. **Entregar.** Envie os MP4 com `SendUserFile` e, para cada corte, sugira:
