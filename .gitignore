@@ -1,0 +1,8 @@
+brutos/
+cortes/
+*.mp4
+*.mkv
+*.mov
+*.palavras.json
+*.transcricao.txt
+__pycache__/
